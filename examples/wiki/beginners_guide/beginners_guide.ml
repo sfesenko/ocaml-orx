@@ -150,13 +150,13 @@ let run () =
     if Orx.Input.is_active "GoLeft" then (
       Orx.Object.set_scale state.hero flip_left;
       Orx.Object.apply_impulse state.hero left_speed;
-      Orx.Object.set_target_anim_exn state.hero "HeroRun"
+      Orx.Object.set_target_anim state.hero "HeroRun" |> ignore
     ) else if Orx.Input.is_active "GoRight" then (
       Orx.Object.set_scale state.hero flip_right;
       Orx.Object.apply_impulse state.hero right_speed;
-      Orx.Object.set_target_anim_exn state.hero "HeroRun"
+      Orx.Object.set_target_anim state.hero "HeroRun" |> ignore
     ) else
-      Orx.Object.set_target_anim_exn state.hero "HeroIdle";
+      Orx.Object.set_target_anim state.hero "HeroIdle" |> ignore;
 
     (* Shooting *)
     if Orx.Input.is_active "Shoot" then
