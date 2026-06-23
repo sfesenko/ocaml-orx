@@ -419,9 +419,7 @@ module Clock : sig
 
   val restart : t -> Status.t
 
-  val pause : t -> unit
-
-  val unpause : t -> unit
+  val pause : t -> bool -> unit
 
   val is_paused : t -> bool
 
@@ -984,12 +982,6 @@ module Object : sig
 
   val add_shader_recursive : t -> string -> unit
 
-  val remove_shader : t -> string -> Status.t
-
-  val remove_shader_exn : t -> string -> unit
-
-  val remove_shader_recursive : t -> string -> unit
-
   (** {2 Placement and dimensions} *)
 
   val get_rotation : t -> float
@@ -1198,7 +1190,7 @@ module Shader_param_type : sig
     | Float
     | Texture
     | Vector
-    | Time
+    | Number
 end
 
 module Shader : sig
@@ -1219,18 +1211,6 @@ module Shader : sig
 
   val get_name : t -> string
   (** [get_name shader] gets the config name for [shader]. *)
-end
-
-module Shader_pointer : sig
-  (** {1 Pointers to shaders}
-
-      From https://orx-project.org/orx/doc/html/group__orx_shader_pointer.html *)
-
-  type t
-
-  val get_shader : t -> int -> Shader.t option
-  (** [get_shader ptr index] gets the shader associated with [ptr] at index
-      [index]. *)
 end
 
 module Anim : sig
@@ -1623,12 +1603,12 @@ module Viewport : sig
   (** [get_camera viewport] is the camera associated with [viewport] if one
       exists. *)
 
-  val get_shader_pointer : t -> Shader_pointer.t option
-  (** [get_shader_pointer viewport] is the shader pointer associated with
-      [viewport] if one exists. *)
+  val get_shader : t -> Shader.t option
+  (** [get_shader viewport] is the shader associated with [viewport] if one
+      exists. *)
 
-  val get_shader_exn : ?index:int -> t -> Shader.t
-  (** [get_shader_exn ?index viewport] is the shader associated with [viewport]. *)
+  val get_shader_exn : t -> Shader.t
+  (** [get_shader_exn viewport] is the shader associated with [viewport]. *)
 
   val get_name : t -> string
   (** [get_name viewport] is the name of [viewport]. *)

@@ -23,5 +23,4 @@ module Input_type = Orx_types.Input_type
 module Mouse_axis = Orx_types.Mouse_axis
 module Mouse_button = Orx_types.Mouse_button
 module Sound_status = Orx_types.Sound_status
-module Shader_pointer = Orx_gen.Shader_pointer
 module _ = Orx_gen.Time_line
