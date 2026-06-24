@@ -26,7 +26,6 @@
   (names orx_stubs orx_manual_stubs)
   (flags
    :standard
-   -Wno-ignored-qualifiers
    (:include ../discover/orx-c-include-flags.sexp)))
  (c_library_flags
   :standard

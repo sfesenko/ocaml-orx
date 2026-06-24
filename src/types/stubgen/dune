@@ -36,21 +36,15 @@
  (deps
   (:c ./orx_ml_types_stubgen.c))
  (action
-  (progn
-   (run
-    %{cc}
-    %{c}
-    %{read-lines:../../discover/orx-c-include-flags.txt}
-    %{read-lines:../../discover/orx-c-link-flags.txt}
-    -I
-    %{ocaml_where}/../ctypes
-    -I
-    %{ocaml_where}
-    -o
-    %{targets})
-   (run
-    install_name_tool
-    -change
-    @executable_path/%{read-lines:../../discover/orx-c-library.txt}
-    %{read-lines:../../discover/orx-c-library-location.txt}
-    %{targets}))))
+  (run
+   %{cc}
+   %{c}
+   %{read-lines:../../discover/orx-c-include-flags.txt}
+   -Wl,-headerpad_max_install_names
+   %{read-lines:../../discover/orx-c-link-flags.txt}
+   -I
+   %{ocaml_where}/../ctypes
+   -I
+   %{ocaml_where}
+   -o
+   %{targets})))
