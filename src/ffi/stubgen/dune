@@ -16,11 +16,4 @@
  (deps orx_stubgen.exe)
  (targets orx_stubgen.run.exe)
  (action
-  (progn
-   (copy %{deps} %{targets})
-   (run
-    install_name_tool
-    -change
-    @executable_path/%{read-lines:../../discover/orx-c-library.txt}
-    %{read-lines:../../discover/orx-c-library-location.txt}
-    %{targets}))))
+  (copy %{deps} %{targets})))

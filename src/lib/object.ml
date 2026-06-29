@@ -91,21 +91,39 @@ let group_id group =
   | Group name -> String_id.get_id name
   | Group_id id -> id
 
+(* Neighbor list via orxObject_ForAllNeighbors *)
+let neighbor_callback = Ctypes.(t @-> ptr void @-> returning bool)
+module Neighbor_callback = (val Foreign.dynamic_funptr neighbor_callback)
+
+let c_for_all_neighbors =
+  Ctypes.(
+    Foreign.foreign "orxObject_ForAllNeighbors"
+      (Neighbor_callback.t
+      @-> Obox.t
+      @-> String_id.t
+      @-> bool
+      @-> ptr void
+      @-> returning Status.t
+      )
+  )
+
 let get_neighbor_list (box : Obox.t) group =
-  match create_neighbor_list box (group_id group) with
-  | None -> fail "Failed to allocate neighbor list"
-  | Some bank ->
-    let ptrs = Bank.to_list bank in
-    let objects =
-      List.map
-        (fun p ->
-          let ptr_ptr_void = Ctypes.from_voidp (Ctypes.ptr Ctypes.void) p in
-          of_void_pointer !@ptr_ptr_void |> Option.get
-        )
-        ptrs
-    in
-    delete_neighbor_list bank;
-    objects
+  let objects : t list ref = ref [] in
+  let callback obj _ctx =
+    objects := obj :: !objects;
+    true
+  in
+  let callback_ptr = Neighbor_callback.of_fun callback in
+  (match
+     c_for_all_neighbors callback_ptr box (group_id group) true Ctypes.null
+   with
+  | Ok () -> ()
+  | Error `Orx ->
+    Neighbor_callback.free callback_ptr;
+    fail "Failed to enumerate neighbors"
+  );
+  Neighbor_callback.free callback_ptr;
+  List.rev !objects
 
 let pick v group = pick v (group_id group)
 
@@ -235,10 +253,10 @@ let remove_all_fxs_recursive_exn o =
   remove_all_fxs_recursive o
   |> Status.raise "Unable to recursively remove all FXs from %s" (get_name o)
 
-let add_shader_exn o name =
-  add_shader o name |> Status.raise "Unable to add shader %s" name
-let remove_shader_exn o name =
-  remove_shader o name |> Status.raise "Unable to remove shader %s" name
+let set_shader_from_config_exn o name =
+  set_shader_from_config o name
+  |> Status.raise "Unable to set shader from config %s"
+    (match name with None -> "(clear)" | Some n -> n)
 
 let add_time_line_track_exn o name =
   add_time_line_track o name

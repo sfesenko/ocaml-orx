@@ -14,6 +14,11 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+# Cancel in-progress runs on the same branch when a new push occurs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
@@ -23,74 +28,90 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          - windows-2019
+          - windows-2022
         gmakeconfig:
           - release
         gmakeplatform:
           - 64
         ocamlversion:
+          - 5.4.x
           - 4.14.x
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout ocaml-orx
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
         with:
           path: ocaml-orx
 
       - name: Checkout orx
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
         with:
           repository: orx/orx
           path: orx
 
+      - name: Get orx commit SHA
+        id: orx-commit
+        working-directory: orx
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Cache orx C library
+        uses: actions/cache@v6
+        id: cache-orx
+        with:
+          path: |
+            orx/code/lib
+            orx/code/include/base/orxBuild.h
+          key: orx-build-${{ runner.os }}-${{ steps.orx-commit.outputs.sha }}
+
       - name: Update apt repo
         run: sudo apt-get -qq update
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
 
       - name: Install extra OS deps for orx
         run: sudo apt-get -y install freeglut3-dev libxrandr-dev
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
 
       - name: orx setup
         working-directory: orx
         run: ./setup.sh
-        if: matrix.os != 'windows-2019'
+        if: runner.os != 'Windows' && steps.cache-orx.outputs.cache-hit != 'true'
 
       - name: orx setup
         working-directory: orx
         run: ./setup.bat
-        if: matrix.os == 'windows-2019'
+        if: runner.os == 'Windows' && steps.cache-orx.outputs.cache-hit != 'true'
 
-      - name: orx build (gmake)
-        working-directory: orx/code/build/linux/gmake
-        run: make config=${{ matrix.gmakeconfig }}${{ matrix.gmakeplatform }}
-        if: matrix.os == 'ubuntu-latest'
+      - name: Determine orx build directory
+        id: orx-dir
+        shell: bash
+        run: |
+          case ${{ runner.os }} in
+            Linux) echo "dir=linux" >> $GITHUB_OUTPUT ;;
+            macOS) echo "dir=mac" >> $GITHUB_OUTPUT ;;
+            Windows) echo "dir=windows" >> $GITHUB_OUTPUT ;;
+          esac
 
-      - name: orx build (gmake)
-        working-directory: orx/code/build/mac/gmake
+      - name: orx build
+        working-directory: orx/code/build/${{ steps.orx-dir.outputs.dir }}/gmake
         run: make config=${{ matrix.gmakeconfig }}${{ matrix.gmakeplatform }}
-        if: matrix.os == 'macos-latest'
-
-      - name: orx build (gmake)
-        working-directory: orx/code/build/windows/gmake
-        run: make config=${{ matrix.gmakeconfig }}${{ matrix.gmakeplatform }}
-        if: matrix.os == 'windows-2019'
+        if: steps.cache-orx.outputs.cache-hit != 'true'
 
       - name: Set ORX environment
         run: echo "ORX=${{ github.workspace }}/orx/code" >> $GITHUB_ENV
-        if: matrix.os != 'windows-2019'
+        if: runner.os != 'Windows'
 
       - name: Set ORX environment
         run: echo "ORX=${{ github.workspace }}/orx/code" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
-        if: matrix.os == 'windows-2019'
+        if: runner.os == 'Windows'
 
       - name: Setup OCaml
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocamlversion }}
           opam-local-packages: ocaml-orx/*.opam
+          dune-cache: true
 
       - name: Install opam dependencies
         working-directory: ocaml-orx
@@ -101,3 +122,5 @@ jobs:
         run: opam exec -- dune build
         env:
           ORX: ${{ env.ORX }}
+          LD_LIBRARY_PATH: ${{ env.ORX }}/lib/dynamic
+          DYLD_LIBRARY_PATH: ${{ env.ORX }}/lib/dynamic

@@ -8,17 +8,11 @@ let of_structure (s : Structure.t) : t option =
 
 let create_from_config_exn = create_exn create_from_config "viewport"
 
-let get_shader_exn ?(index = 0) v =
-  match get_shader_pointer v with
+let get_shader_exn v =
+  match get_shader v with
   | None ->
-    Fmt.invalid_arg "No shader pointer associated with viewport %s" (get_name v)
-  | Some pointer ->
-    ( match Orx_gen.Shader_pointer.get_shader pointer index with
-    | None ->
-      Fmt.invalid_arg "No shader %d associated with viewport %s" index
-        (get_name v)
-    | Some shader -> shader
-    )
+    Fmt.invalid_arg "No shader associated with viewport %s" (get_name v)
+  | Some shader -> shader
 
 let get_exn name =
   match get name with

@@ -359,16 +359,14 @@ module Bindings (F : Ctypes.TYPE) = struct
       | Float
       | Texture
       | Vector
-      | Time
 
     let make tag = F.constant ("orxSHADER_PARAM_TYPE_" ^ tag) F.int64_t
     let float = make "FLOAT"
     let texture = make "TEXTURE"
     let vector = make "VECTOR"
-    let time = make "TIME"
 
     let map_to_constant =
-      [ (Float, float); (Texture, texture); (Vector, vector); (Time, time) ]
+      [ (Float, float); (Texture, texture); (Vector, vector) ]
 
     let map_from_constant = swap_tuple_list map_to_constant
 
@@ -376,13 +374,6 @@ module Bindings (F : Ctypes.TYPE) = struct
       F.enum "__orxSHADER_PARAM_TYPE_t" map_to_constant ~unexpected:(fun i ->
           Fmt.invalid_arg "unsupported shader param type enum: %Ld" i
       )
-  end
-
-  module Shader_pointer = struct
-    type t
-
-    (* Unsealed structure because the type is anonymous *)
-    let t : t structure = F.structure "__orxSHADERPOINTER_t"
   end
 
   module Shader = struct

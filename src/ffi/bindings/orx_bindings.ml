@@ -647,9 +647,7 @@ module Bindings (F : Ctypes.FOREIGN) = struct
     (* Adjust clock's progress *)
     let restart = c "orxClock_Restart" (t @-> returning Status.t)
 
-    let pause = c "orxClock_Pause" (t @-> returning Status.as_exn)
-
-    let unpause = c "orxClock_Unpause" (t @-> returning Status.as_exn)
+    let pause = c "orxClock_Pause" (t @-> bool @-> returning void)
 
     let is_paused = c "orxClock_IsPaused" (t @-> returning bool)
   end
@@ -846,17 +844,13 @@ module Bindings (F : Ctypes.FOREIGN) = struct
       c "orxObject_RemoveAllFXsRecursive" (t @-> returning Status.t)
 
     (* Shaders *)
-    let add_shader =
-      c "orxObject_AddShader" (t @-> string @-> returning Status.t)
+    let set_shader_from_config =
+      c "orxObject_SetShaderFromConfig"
+        (t @-> string_opt @-> returning Status.t)
 
-    let add_shader_recursive =
-      c "orxObject_AddShaderRecursive" (t @-> string @-> returning void)
-
-    let remove_shader =
-      c "orxObject_RemoveShader" (t @-> string @-> returning Status.t)
-
-    let remove_shader_recursive =
-      c "orxObject_RemoveShaderRecursive" (t @-> string @-> returning void)
+    let set_shader_from_config_recursive =
+      c "orxObject_SetShaderFromConfigRecursive"
+        (t @-> string_opt @-> returning void)
 
     (* Position and orientation *)
     let get_rotation = c "orxObject_GetRotation" (t @-> returning float)
@@ -1039,14 +1033,6 @@ module Bindings (F : Ctypes.FOREIGN) = struct
         (t @-> T.Structure_id.t @-> returning Structure.t_opt)
 
     (* Object selection *)
-    (* Neighbor = Object(s) within a bounding box *)
-    let create_neighbor_list =
-      c "orxObject_CreateNeighborList"
-        (Obox.t @-> String_id.t @-> returning Bank.t_opt)
-
-    let delete_neighbor_list =
-      c "orxObject_DeleteNeighborList" (Bank.t @-> returning void)
-
     let pick = c "orxObject_Pick" (Vector.t @-> String_id.t @-> returning t_opt)
 
     let box_pick =
@@ -1093,17 +1079,6 @@ module Bindings (F : Ctypes.FOREIGN) = struct
     let get_name = c "orxShader_GetName" (t @-> returning string)
   end
 
-  module Shader_pointer = struct
-    type t = T.Shader_pointer.t structure ptr
-
-    let t = ptr T.Shader_pointer.t
-
-    let t_opt = ptr_opt T.Shader_pointer.t
-
-    let get_shader =
-      c "orxShaderPointer_GetShader" (t @-> int @-> returning Shader.t_opt)
-  end
-
   module Time_line = struct
     type t = T.Time_line.t structure ptr
 
@@ -1134,8 +1109,8 @@ module Bindings (F : Ctypes.FOREIGN) = struct
 
     let get_camera = c "orxViewport_GetCamera" (t @-> returning Camera.t_opt)
 
-    let get_shader_pointer =
-      c "orxViewport_GetShaderPointer" (t @-> returning Shader_pointer.t_opt)
+    let get_shader =
+      c "orxViewport_GetShader" (t @-> returning Shader.t_opt)
 
     let get_name = c "orxViewport_GetName" (t @-> returning string)
 
@@ -1536,9 +1511,6 @@ module Bindings (F : Ctypes.FOREIGN) = struct
       c "orxLocale_SetString"
         (string @-> string @-> string @-> returning Status.t)
 
-    let get_key_count = c "orxLocale_GetKeyCount" (string @-> returning uint32_t)
-
-    let get_key = c "orxLocale_GetKey" (uint32_t @-> string @-> returning string)
   end
 
   module Log = struct
