@@ -253,8 +253,10 @@ let remove_all_fxs_recursive_exn o =
   remove_all_fxs_recursive o
   |> Status.raise "Unable to recursively remove all FXs from %s" (get_name o)
 
-let add_shader_exn o name =
-  add_shader o name |> Status.raise "Unable to add shader %s" name
+let set_shader_from_config_exn o name =
+  set_shader_from_config o name
+  |> Status.raise "Unable to set shader from config %s"
+    (match name with None -> "(clear)" | Some n -> n)
 
 let add_time_line_track_exn o name =
   add_time_line_track o name

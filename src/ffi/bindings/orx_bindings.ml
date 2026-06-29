@@ -844,11 +844,13 @@ module Bindings (F : Ctypes.FOREIGN) = struct
       c "orxObject_RemoveAllFXsRecursive" (t @-> returning Status.t)
 
     (* Shaders *)
-    let add_shader =
-      c "orxObject_SetShaderFromConfig" (t @-> string @-> returning Status.t)
+    let set_shader_from_config =
+      c "orxObject_SetShaderFromConfig"
+        (t @-> string_opt @-> returning Status.t)
 
-    let add_shader_recursive =
-      c "orxObject_SetShaderFromConfigRecursive" (t @-> string @-> returning void)
+    let set_shader_from_config_recursive =
+      c "orxObject_SetShaderFromConfigRecursive"
+        (t @-> string_opt @-> returning void)
 
     (* Position and orientation *)
     let get_rotation = c "orxObject_GetRotation" (t @-> returning float)

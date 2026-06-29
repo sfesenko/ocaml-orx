@@ -976,11 +976,11 @@ module Object : sig
 
   (*** {2 Shaders} *)
 
-  val add_shader : t -> string -> Status.t
+  val set_shader_from_config : t -> string option -> Status.t
 
-  val add_shader_exn : t -> string -> unit
+  val set_shader_from_config_exn : t -> string option -> unit
 
-  val add_shader_recursive : t -> string -> unit
+  val set_shader_from_config_recursive : t -> string option -> unit
 
   (** {2 Placement and dimensions} *)
 
@@ -1190,7 +1190,6 @@ module Shader_param_type : sig
     | Float
     | Texture
     | Vector
-    | Number
 end
 
 module Shader : sig

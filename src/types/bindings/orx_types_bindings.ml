@@ -359,16 +359,14 @@ module Bindings (F : Ctypes.TYPE) = struct
       | Float
       | Texture
       | Vector
-      | Number
 
     let make tag = F.constant ("orxSHADER_PARAM_TYPE_" ^ tag) F.int64_t
     let float = make "FLOAT"
     let texture = make "TEXTURE"
     let vector = make "VECTOR"
-    let number = make "NUMBER"
 
     let map_to_constant =
-      [ (Float, float); (Texture, texture); (Vector, vector); (Number, number) ]
+      [ (Float, float); (Texture, texture); (Vector, vector) ]
 
     let map_from_constant = swap_tuple_list map_to_constant
 
